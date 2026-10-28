@@ -1,7 +1,7 @@
 # MacWaveOrg/Bottle
 
 MacWave 4.0 的预编译二进制存放处。以前每条索引记录只有一个指向上游的 `url`，
-用户直接从别人的服务器下载；4.0 改成先由 CI 抓下来放进这里，用户只从我们这里取。
+用户直接从别人的服务器下载；4.0 改成先由 CI 取下来放进这里，用户只从我们这里取。
 
 这样做解决三件事（这也是 4.0 的全部动机）：
 
@@ -11,63 +11,70 @@ MacWave 4.0 的预编译二进制存放处。以前每条索引记录只有一�
 
 ## 路径布局
 
-客户端拼地址的方式只有一处，在 MacWave 仓库的 `lib/domains.py`：
+布局照抄 `infosource` 的目录形状，只把文件名前面那个下划线去掉：
 
-```python
-def bottle_url(package_name, package_version, arch, filename):
-    return f"{require_domain('bottle')}/{package_name}/{package_version}/{arch}/{filename}"
-```
+| `infosource` 的记录 | 这里的产物 |
+| --- | --- |
+| `pkg/pkginfo_<架构>/<名字>/_<名字>@<版本>` | `pkg/pkginfo_<架构>/<名字>/<名字>@<版本><扩展名>` |
 
-也就是：
+于是「索引里的第 N 条」与「这里第 N 个文件」一眼对得上，镜像站也可以原样复制这棵树。
+客户端拼地址的方式只有一处，在 MacWave 仓库 `lib/domains.py` 的 `payload_path()`。
 
-```
-<MACWAVE_BOTTLE_DOMAIN>/<包名>/<版本>/<架构>/<文件名>
-```
-
-例如：
+举例：
 
 ```
-bottles/jq/1.7.1/arm64/jq-macos-arm64                 →  <域名>/jq/1.7.1/arm64/jq-macos-arm64
-bottles/ollama/0.12.3/amd64/ollama-darwin.tgz        →  <域名>/ollama/0.12.3/amd64/ollama-darwin.tgz
+pkg/pkginfo_arm64/jq/jq@1.7.1                        ← 上游是裸可执行文件，就没有扩展名
+pkg/pkginfo_arm64/ollama/ollama@0.12.3.tgz
+pkg/pkginfo_amd64/choma/choma@1.0
 ```
 
-仓库里保留一层 `bottles/` 只是为了在 GitHub 的网页上好认，域名要指到它下面。
+## 字节原样搬运，不重打包
 
-**文件名必须以索引为准。** 索引记录（`infosource`）里有一条 `file:` 字段，客户端拿它当
-文件名，也靠它的扩展名决定用 `zip` 还是 `tar.gz` 解压——所以这里放的文件名必须与索引
-里写的一字不差，改名就等于换包。
+这是本仓库最重要的一条约定：**放进来的是上游那份文件，一个字节都不改。**
+
+因此才能：
+
+- 校验值与上游公布的一致，可以直接用官方 SHA256，不必自己下载再算一遍；
+- 不存在「重打包后的内容与上游不同」这种只能靠信任解释的问题。
+
+代价是扩展名不统一。所以客户端从索引的 `file` 字段（也就是上游那份文件的名字）取出
+扩展名，只改文件名不改内容；`pkgunzip.sh` 早就按扩展名支持
+`zip` / `tar.gz` / `tar.bz2` / `tar.xz` / `tgz` / `conda` 以及裸二进制，不必为 4.0 再加分支。
+
+**文件名必须以索引为准。** 索引记录里有一条 `file:` 字段，客户端拿它的扩展名拼出
+`<名字>@<版本><扩展名>`。所以这里放的文件必须就是索引里 `file` 指的那一份，换了内容
+就等于换了包，`sha256` 也必须跟着换。
 
 ## 与索引的关系
 
 `infosource` 的那条记录仍然保留 `url` 字段，但 **4.0 不读它**——它只用于
 `--install-from-source`（绕开这里直接回上游装）和给人看的上游线索。所以：
 
-- 加一个包：先写 `infosource` 的记录（含 `file` 与 `sha256`），再把对应的字节放进来；
-- `sha256` 必须是这里那份文件的校验值，不是上游的。
+- 加一个包：先写 `infosource` 的记录（含 `file` 与 `sha256`），再把对应字节放到这里；
+- `sha256` 是这份文件的校验值，通常就等于上游公布的值。
 
 ## 一个待定的问题：GHCR
 
-手稿里写的是「GHCR，具体方案略」。这里要先说清楚两者的差别，因为它决定
-`bottle_url` 怎么写：
+手稿里写的是「GHCR，具体方案略」。两者的差别会直接改变 `payload_path()`：
 
-- **普通文件路径**（本仓库 + CDN / Pages / Release 资产 / 任意对象存储）：上面那行
-  拼字符串就够用，`MACWAVE_BOTTLE_DOMAIN` 指到一个前缀即可。
-- **GHCR（OCI registry）**：它不是按路径取文件，而是 `/v2/<org>/<repo>/manifests/<tag>`
-  与 `/v2/<org>/<repo>/blobs/sha256:<digest>` 两套接口。这时 `bottle_url` 不能只拼路径，
-  得先取 manifest 再取 blob，客户端也要多一步。
+- **普通文件路径**（本仓库 + CDN / Pages / Release 资产 / 任意对象存储）：拼字符串就够用，
+  `MACWAVE_BOTTLE_DOMAIN` 指到一个前缀即可，也就是当前代码的形态。
+- **GHCR（OCI registry）**：它不是按路径取文件，而是
+  `/v2/<org>/<repo>/manifests/<tag>` 与 `/v2/<org>/<repo>/blobs/sha256:<digest>` 两套接口。
+  客户端要多一步「先取 manifest 再取 blob」，`payload_path()` 也要重写。
 
-所以：**在定下 GHCR 之前，`bottles/` 这套路径是当前代码唯一能用的形态。**
-如果最后选 GHCR，要改的只有 `lib/domains.py` 里的 `bottle_url` 与下载那一步，
-索引格式与文件名规则不变。这条留给 4.0 落地时决定，当前代码按普通路径写。
+所以在定下 GHCR 之前，上面这套路径是当前代码唯一能用的形态。若最后选 GHCR，
+要改的只有 `lib/domains.py` 里拼路径那一个函数与下载那一步，索引格式与文件名规则不变。
 
 ## 目录
 
 ```
-bottles/
-    <包名>/
-        <版本>/
-            <架构>/           arm64 或 amd64
-                <文件名>      与索引 file 字段完全一致
+pkg/
+    pkginfo_arm64/
+        <包名>/
+            <包名>@<版本><扩展名>
+    pkginfo_amd64/
+        ...
 ```
 
-空目录不会被 Git 保存，所以下面用 `.gitkeep` 占位；真正的文件由 CI 放进来。
+空目录不会被 Git 保存，所以用 `.gitkeep` 占位；真正的文件由 CI 放进来。
