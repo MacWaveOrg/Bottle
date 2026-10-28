@@ -34,9 +34,13 @@ https://github.com/MacWaveOrg/Bottle/releases/download/jq/jq%401.7.1.arm64
 
 ```
 默认：https://github.com/MacWaveOrg/Bottle/releases/download/jq/jq%401.7.1.arm64
-镜像：https://mirror.example.cn/macwave/bottle/jq/jq%401.7.1.arm64
-                                             ↑ 域名之后完全相同
+镜像：https://mirror.example.cn/MacWave/bottle/jq/jq%401.7.1.arm64
+                                  ↑ 域名之后完全相同
 ```
+
+镜像路径里的 `MacWave/` 不是随意的：一个镜像域名要能被多个产品共用，LinuxWave 将来会放在
+同一台机器的 `/LinuxWave`，谁也不独占域名根。所以镜像站的目录结构与 `MACWAVE_BOTTLE_DOMAIN`
+的值都带这一层。
 
 换镜像就是换一个环境变量（`MACWAVE_BOTTLE_DOMAIN`），镜像站不需要理解任何协议。
 
@@ -92,7 +96,7 @@ jq@1.7.1.amd64
 
 ```bash
 python3 scripts/sync_payloads.py --infosource <infosource 检出> \
-  --out /www/wwwroot/mirror.example.cn \
+  --out /www/wwwroot/mirror.example.cn/MacWave \
   --source payload --jobs 6
 ```
 
