@@ -111,7 +111,6 @@ tag 就是包名，所以这里会出现几个“看着像项目名”的 tag。
 | tag | 是什么 | 装出来的命令 |
 | --- | --- | --- |
 | `linuxwave` | [orhun/linuxwave](https://github.com/orhun/linuxwave)：Zig 写的音乐生成器，把熵变成 wav，MIT | `linuxwave` |
-| `waveterm` | [Wave Terminal](https://github.com/wavetermdev/waveterm)：终端 + 图形功能的 Electron 应用 | `waveterm` |
 
 `linuxwave` 与 LinuxWave 包管理器同名纯属巧合。两个 `linuxwave` 的差别：包管理器的命令叫
 `wave`，软件包的命令叫 `linuxwave`；包管理器本体不进这个仓库（它走 `Selfupdate` 的自动更新），
@@ -119,6 +118,9 @@ tag 就是包名，所以这里会出现几个“看着像项目名”的 tag。
 
 ### `wave` 这个名字保留给包管理器自己
 
-`wave` 是 MacWave / LinuxWave 的命令名，因此**永远不做包名**。名字里带 wave 的工具按它
-真实的命令命名（Wave Terminal 就是 `waveterm`）。原因很具体：安装软件包时客户端会在
-`links/` 下建同名快捷方式，如果某个包叫 `wave`，它就会和包管理器自己的命令抢同一个名字。
+`wave` 是 MacWave / LinuxWave 的命令名，因此**永远不做包名** —— 名字里带 wave 的工具要按它
+真实的命令命名（例如 `waveterm`）。原因很具体：安装软件包时客户端会在 `links/` 下建同名
+快捷方式，如果某个包叫 `wave`，它就会和包管理器自己的命令抢同一个名字。
+
+**不收 GUI 应用。** 这里只放命令行软件包，Electron / 带 `.app` 的桌面程序（Wave Terminal 就是
+这一类）不在收录范围内，所以也不会出现它们的 tag。
