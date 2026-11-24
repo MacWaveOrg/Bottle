@@ -103,24 +103,24 @@ python3 scripts/sync_payloads.py --infosource <infosource 检出> \
 `--source payload` 表示从这里的 Release 取，而不是打扰上游。重复运行只补新增。
 完整步骤见 MacWave 仓库的 `docs/MIRROR-SETUP.md`。
 
-## 名字与项目撞车的软件包
+## 特殊软件包：`wave` / `macwave` / `linuxwave`
 
-tag 就是包名，所以这里会出现几个“看着像项目名”的 tag。它们是普通软件包，与本项目没有
-任何关系，也没有特殊通道 —— 唯一要记住的是下面这张表。
+这三个名字容易和项目本身搞混，这里一次说清。tag 就是包名，所以「Bottle 里有没有这个 tag」
+= 「有没有这个软件包」。
 
-| tag | 是什么 | 装出来的命令 |
-| --- | --- | --- |
-| `linuxwave` | [orhun/linuxwave](https://github.com/orhun/linuxwave)：Zig 写的音乐生成器，把熵变成 wav，MIT | `linuxwave` |
+| 名字 | 这里有这个 tag 吗 | 是什么 | 装出来的命令 |
+| --- | --- | --- | --- |
+| `wave` | **没有，也不会有** | 包管理器自己的命令名（MacWave 与 LinuxWave 共用同一个 `wave`） | `wave` |
+| `macwave` | **没有，也不会有** | macOS 包管理器本体，走 `MacWaveOrg/Selfupdate` 的自动更新，不进 Bottle | `wave` |
+| `linuxwave` | **有** | 第三方软件包：[orhun/linuxwave](https://github.com/orhun/linuxwave)，Zig 写的音乐生成器，把熵变成 wav，MIT | `linuxwave` |
+| `waveterm` | 没有 | Wave Terminal，Electron 桌面程序 | — |
 
-`linuxwave` 与 LinuxWave 包管理器同名纯属巧合。两个 `linuxwave` 的差别：包管理器的命令叫
-`wave`，软件包的命令叫 `linuxwave`；包管理器本体不进这个仓库（它走 `Selfupdate` 的自动更新），
-所以这里不会出现“包管理器本体”的 tag。
+要点：
 
-### `wave` 这个名字保留给包管理器自己
-
-`wave` 是 MacWave / LinuxWave 的命令名，因此**永远不做包名** —— 名字里带 wave 的工具要按它
-真实的命令命名（例如 `waveterm`）。原因很具体：安装软件包时客户端会在 `links/` 下建同名
-快捷方式，如果某个包叫 `wave`，它就会和包管理器自己的命令抢同一个名字。
-
-**不收 GUI 应用。** 这里只放命令行软件包，Electron / 带 `.app` 的桌面程序（Wave Terminal 就是
-这一类）不在收录范围内，所以也不会出现它们的 tag。
+- `linuxwave` 与 LinuxWave 包管理器同名纯属巧合。包管理器的命令叫 `wave`，软件包的命令叫
+  `linuxwave`；包管理器本体不进这个仓库，所以不会出现「包管理器本体」的 tag。
+- `wave` **永远不做包名** —— 名字里带 wave 的工具要按它真实的命令命名（例如 `waveterm`）。
+  原因很具体：安装软件包时客户端会在 `links/` 下建同名快捷方式，如果某个包叫 `wave`，
+  它就会和包管理器自己的命令抢同一个名字。
+- **不收 GUI 应用。** 这里只放命令行软件包，Electron / 带 `.app` 的桌面程序（Wave Terminal
+  就是这一类）不在收录范围内，所以也不会有它们的 tag。
