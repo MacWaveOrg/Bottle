@@ -82,7 +82,29 @@ jq@1.8.2.macos-amd64.tar.gz
 询问（`-F` 可强制）。**产物没写 `-mmacosx-version-min` 时 `minos` 就等于构建机的系统版本** ——
 这正是 `aria2c@1.37.0` 曾经「声明支持 12、实际要求 15」的原因。
 
-## 三、产物契约（这里放的东西必须满足）
+## 三、特殊软件包：`wave` / `macwave` / `linuxwave`
+
+这三个名字容易和项目本身搞混，这里一次说清。tag 就是包名，所以「Bottle 里有没有这个 tag」
+= 「有没有这个软件包」。
+
+| 名字 | 这里有这个 tag 吗 | 是什么 | 装出来的命令 |
+| --- | --- | --- | --- |
+| `wave` | **没有，也不会有** | 包管理器自己的命令名（MacWave 与 LinuxWave 共用同一个 `wave`） | `wave` |
+| `macwave` | **没有，也不会有** | macOS 包管理器本体，走 `MacWaveOrg/Selfupdate` 的自动更新，不进 Bottle | `wave` |
+| `linuxwave` | **有** | 第三方软件包：[orhun/linuxwave](https://github.com/orhun/linuxwave)，Zig 写的音乐生成器，把熵变成 wav，MIT | `linuxwave` |
+| `waveterm` | 没有 | Wave Terminal，Electron 桌面程序 | — |
+
+要点：
+
+- `linuxwave` 与 LinuxWave 包管理器同名纯属巧合。包管理器的命令叫 `wave`，软件包的命令叫
+  `linuxwave`；包管理器本体不进这个仓库，所以不会出现「包管理器本体」的 tag。
+- `wave` **永远不做包名** —— 名字里带 wave 的工具要按它真实的命令命名（例如 `waveterm`）。
+  原因很具体：安装软件包时客户端会在 `bin/` 下建同名链接，如果某个包叫 `wave`，
+  它就会和包管理器自己的命令抢同一个名字。
+- **不收 GUI 应用。** 这里只放命令行软件包，Electron / 带 `.app` 的桌面程序（Wave Terminal
+  就是这一类）不在收录范围内，所以也不会有它们的 tag。
+
+## 四、产物契约（这里放的东西必须满足）
 
 这一节是**对外承诺**：客户端与镜像都按它工作。
 
@@ -127,7 +149,7 @@ jq@1.8.2.macos-amd64.tar.gz
 缺哪个架构就让那个平台明说「没有你这个平台的产物」，**不要**拿另一个架构的字节顶上 ——
 用户会拿到 `exec format error`。
 
-## 四、四条铁律
+## 五、四条铁律
 
 **一、只增不删。** 旧版本必须永远可下载。多版本共存是产品前提 —— 删掉一个资产，就等于让
 `wave install <包>@<旧版本>` 永久失效。
@@ -142,7 +164,7 @@ jq@1.8.2.macos-amd64.tar.gz
 写回 `infosource` 的记录。两者错位的话用户下到的字节校验不过 —— 症状是「装到一半失败」，
 而索引本身看起来完全正常。
 
-## 五、与索引的关系
+## 六、与索引的关系
 
 - 版本记录里的 `file` 决定**扩展名**（客户端据此选解压器），必须先于字节存在；
 - `sha256` 是**这里的字节**的校验值（重打过就不再是上游的值）；
@@ -151,7 +173,7 @@ jq@1.8.2.macos-amd64.tar.gz
 
 平台标签与记录名的对应关系见 MacWave 仓库的 `docs/DATA-LAYER.md`。
 
-## 六、谁往里放东西
+## 七、谁往里放东西
 
 - **重打**：`scripts/prepare_bottle.py`（`--all` 批量、`--cache` 复用下载、`--tsv` 输出待回填的
   `file`/`sha256`、`--resume` 断点续跑）。它**只下载、重打、打印**，不上传也不改索引。
@@ -160,7 +182,7 @@ jq@1.8.2.macos-amd64.tar.gz
 
 需要重打的情形通常只有两个：换了安装布局（1.0 的 `Shore/`）、或者上游产物带坏路径。
 
-## 七、闸门（发布前必过）
+## 八、闸门（发布前必过）
 
 | 闸门 | 查什么 |
 | --- | --- |
@@ -169,7 +191,7 @@ jq@1.8.2.macos-amd64.tar.gz
 | `Ports/scripts/selfbuilt_check.sh` | 架构、签名、绝对引用、文本里的构建目录、`minos` 地板 |
 | `scripts/versions_index_test.sh` | 镜像的 `versions` 清单与实际产物一致（离线可跑） |
 
-## 八、镜像站怎么同步
+## 九、镜像站怎么同步
 
 在镜像服务器上：
 
@@ -181,25 +203,3 @@ python3 scripts/sync_payloads.py --infosource <infosource 检出> \
 
 `--source payload` 表示从这里的 Release 取，而不是打扰上游。重复运行只补新增。
 完整步骤见 MacWave 仓库的 `docs/MIRROR-SETUP.md`。
-
-## 特殊软件包：`wave` / `macwave` / `linuxwave`
-
-这三个名字容易和项目本身搞混，这里一次说清。tag 就是包名，所以「Bottle 里有没有这个 tag」
-= 「有没有这个软件包」。
-
-| 名字 | 这里有这个 tag 吗 | 是什么 | 装出来的命令 |
-| --- | --- | --- | --- |
-| `wave` | **没有，也不会有** | 包管理器自己的命令名（MacWave 与 LinuxWave 共用同一个 `wave`） | `wave` |
-| `macwave` | **没有，也不会有** | macOS 包管理器本体，走 `MacWaveOrg/Selfupdate` 的自动更新，不进 Bottle | `wave` |
-| `linuxwave` | **有** | 第三方软件包：[orhun/linuxwave](https://github.com/orhun/linuxwave)，Zig 写的音乐生成器，把熵变成 wav，MIT | `linuxwave` |
-| `waveterm` | 没有 | Wave Terminal，Electron 桌面程序 | — |
-
-要点：
-
-- `linuxwave` 与 LinuxWave 包管理器同名纯属巧合。包管理器的命令叫 `wave`，软件包的命令叫
-  `linuxwave`；包管理器本体不进这个仓库，所以不会出现「包管理器本体」的 tag。
-- `wave` **永远不做包名** —— 名字里带 wave 的工具要按它真实的命令命名（例如 `waveterm`）。
-  原因很具体：安装软件包时客户端会在 `links/` 下建同名快捷方式，如果某个包叫 `wave`，
-  它就会和包管理器自己的命令抢同一个名字。
-- **不收 GUI 应用。** 这里只放命令行软件包，Electron / 带 `.app` 的桌面程序（Wave Terminal
-  就是这一类）不在收录范围内，所以也不会有它们的 tag。
