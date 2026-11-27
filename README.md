@@ -1,3 +1,15 @@
+> **⚠ 本仓库已归档（read-only）。**
+> **This repository is archived (read-only).**
+>
+> 1.0 起由 **Summerwave** 承接：<https://github.com/SummerwaveOrg/Summerwave>
+>
+> **对应仓 / Successor：<https://github.com/SummerwaveOrg/Bottle>**
+> 1.0 的载荷仓，软件包**与依赖**都在这里（不再分成两处）。
+>
+> 归档不影响历史内容：代码、raw 文件、Release 资产与 Pages 站点仍可访问。
+> Archiving keeps everything readable: code, raw files, release assets and the Pages site.
+
+
 # MacWaveOrg/Bottle
 
 Summerwave（以及 4.x 的 MacWave）的**预编译产物存放处**。以前每条索引记录只有一个指向上游的
